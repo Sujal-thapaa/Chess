@@ -76,3 +76,20 @@ body {
   .piece img {
     pointer-events: none;
   }
+  .in-check {
+    box-shadow: 0 0 15px 5px red;
+  }
+  .in-check {
+    box-shadow: 0 0 15px 5px red;
+  }
+  
+  .checkmate {
+    animation: checkmateFlash 1s infinite;
+  }
+  
+  @keyframes checkmateFlash {
+    0%   { box-shadow: 0 0 15px 5px red; }
+    50%  { box-shadow: 0 0 25px 10px darkred; }
+    100% { box-shadow: 0 0 15px 5px red; }
+  }
+  

@@ -173,3 +173,4 @@ document.addEventListener('keydown', (event) => {
 
 placeInitialPieces();
 saveMoveHistory();
+highlightKingInCheck();
