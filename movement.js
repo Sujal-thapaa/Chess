@@ -91,81 +91,27 @@ function highlightKingInCheck() {
 }
 
 function getPossibleMoves(type, color, row, col) {
-  const moves = [];
-  switch (type) {
-    case 'K':
-      addMoveIfValid(moves, row + 1, col);
-      addMoveIfValid(moves, row - 1, col);
-      addMoveIfValid(moves, row, col + 1);
-      addMoveIfValid(moves, row, col - 1);
-      addMoveIfValid(moves, row + 1, col + 1);
-      addMoveIfValid(moves, row + 1, col - 1);
-      addMoveIfValid(moves, row - 1, col + 1);
-      addMoveIfValid(moves, row - 1, col - 1);
-      break;
-    case 'Q':
-      addLineMoves(moves, row, col, 1, 0);
-      addLineMoves(moves, row, col, -1, 0);
-      addLineMoves(moves, row, col, 0, 1);
-      addLineMoves(moves, row, col, 0, -1);
-      addLineMoves(moves, row, col, 1, 1);
-      addLineMoves(moves, row, col, -1, 1);
-      addLineMoves(moves, row, col, 1, -1);
-      addLineMoves(moves, row, col, -1, -1);
-      break;
-    case 'R':
-      addLineMoves(moves, row, col, 1, 0);
-      addLineMoves(moves, row, col, -1, 0);
-      addLineMoves(moves, row, col, 0, 1);
-      addLineMoves(moves, row, col, 0, -1);
-      break;
-    case 'B':
-      addLineMoves(moves, row, col, 1, 1);
-      addLineMoves(moves, row, col, -1, 1);
-      addLineMoves(moves, row, col, 1, -1);
-      addLineMoves(moves, row, col, -1, -1);
-      break;
-    case 'N':
-      addMoveIfValid(moves, row + 2, col + 1, true);
-      addMoveIfValid(moves, row + 2, col - 1, true);
-      addMoveIfValid(moves, row - 2, col + 1, true);
-      addMoveIfValid(moves, row - 2, col - 1, true);
-      addMoveIfValid(moves, row + 1, col + 2, true);
-      addMoveIfValid(moves, row + 1, col - 2, true);
-      addMoveIfValid(moves, row - 1, col + 2, true);
-      addMoveIfValid(moves, row - 1, col - 2, true);
-      break;
-    case 'P':
-      const direction = color === 'white' ? -1 : 1;
-      if (addMoveIfValid(moves, row + direction, col) && !squares[(row + direction) * 8 + col].querySelector('.piece')) {
-        if ((color === 'white' && row === 6) || (color === 'black' && row === 1)) {
-          addMoveIfValid(moves, row + 2 * direction, col);
-        }
-      }
-      addCaptureMoveIfValid(moves, row + direction, col + 1, color);
-      addCaptureMoveIfValid(moves, row + direction, col - 1, color);
-      break;
-  }
+  const pseudoMoves = getPseudoLegalMoves(type, color, row, col);  // ✅ USE GAMEPLAY LOGIC
   const legalMoves = [];
   const fromSquare = squares[row * 8 + col];
   const piece = fromSquare.querySelector('.piece');
-  for (const move of moves) {
+
+  for (const move of pseudoMoves) {
     const targetSquare = squares[move.row * 8 + move.col];
     const captured = targetSquare.querySelector('.piece');
 
-    targetSquare.appendChild(piece);
+    targetSquare.appendChild(piece); // Simulate move
     const inCheck = isKingInCheck(color);
 
-    // Undo the move
-    fromSquare.appendChild(piece);
+    fromSquare.appendChild(piece); // Undo move
     if (captured) targetSquare.appendChild(captured);
 
-    if (!inCheck) {
-      legalMoves.push(move);
-    }
+    if (!inCheck) legalMoves.push(move);
   }
+
   return legalMoves;
 }
+
 
 function makeMoveFromUCI(from, to) {
   const fromCol = from.charCodeAt(0) - 97;

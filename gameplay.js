@@ -50,17 +50,46 @@ function getPseudoLegalMoves(type, color, row, col) {
       addMoveIfValid(moves, row - 1, col + 2, true);
       addMoveIfValid(moves, row - 1, col - 2, true);
       break;
-    case 'P':
-      // Pawn moves
-      const direction = color === 'white' ? -1 : 1;
-      if (addMoveIfValid(moves, row + direction, col) && !squares[(row + direction) * 8 + col].querySelector('.piece')) {
-        if ((color === 'white' && row === 6) || (color === 'black' && row === 1)) {
-          addMoveIfValid(moves, row + 2 * direction, col);
+      case 'P':
+        const direction = color === 'white' ? -1 : 1;
+        const startRow = color === 'white' ? 6 : 1; // Starting rows for white and black
+
+        // 1. Forward move (one step)
+        const oneStepRow = row + direction;
+        // Check bounds
+        if (oneStepRow >= 0 && oneStepRow < 8) {
+            const oneStepSquare = squares[oneStepRow * 8 + col];
+            // Check if the square exists and is empty
+            if (oneStepSquare && !oneStepSquare.querySelector('.piece')) {
+                moves.push({ row: oneStepRow, col: col }); // Add valid forward move
+
+                // 2. Double move (only from start row and if one step forward is also empty)
+                if (row === startRow) {
+                    const twoStepsRow = row + 2 * direction;
+                    const twoStepsSquare = squares[twoStepsRow * 8 + col];
+                    // Check if the square exists and is empty
+                    if (twoStepsSquare && !twoStepsSquare.querySelector('.piece')) {
+                        moves.push({ row: twoStepsRow, col: col }); // Add valid double step move
+                    }
+                }
+            }
         }
-      }
-      addCaptureMoveIfValid(moves, row + direction, col + 1, color);
-      addCaptureMoveIfValid(moves, row + direction, col - 1, color);
-      break;
+
+        // 3. Diagonal captures
+        const captureCols = [col - 1, col + 1];
+        captureCols.forEach(captureCol => {
+            // Check bounds for row and column
+            if (oneStepRow >= 0 && oneStepRow < 8 && captureCol >= 0 && captureCol < 8) {
+                const targetSquare = squares[oneStepRow * 8 + captureCol];
+                const targetPiece = targetSquare ? targetSquare.querySelector('.piece') : null;
+                // Check if target square has an opponent's piece
+                if (targetPiece && targetPiece.dataset.color !== color) {
+                    moves.push({ row: oneStepRow, col: captureCol }); // Add valid capture move
+                }
+            }
+        });
+        break;
+    // --- Corrected Pawn Logic End ---
   }
 
   return moves;
@@ -72,26 +101,27 @@ function addMoveIfValid(moves, row, col, capture = false) {
 
   const index = row * 8 + col;
   const targetSquare = squares[index];
-  if (!targetSquare) return false;
+  if (!targetSquare) return false; // Should not happen if board is set up correctly
 
   const targetPiece = targetSquare.querySelector('.piece');
 
-  // If it's a capture move, make sure we're capturing an enemy piece
-  if (capture) {
-    if (targetPiece && targetPiece.dataset && targetPiece.dataset.color !== selectedPiece?.dataset?.color) {
-      moves.push({ row, col });
-      return true;
-    }
+  if (!targetPiece) {
+    // Can always move to an empty square (relevant for King, Knight)
+    moves.push({ row, col });
+    return true;
   } else {
-    // If it's a non-capture move, it must be an empty square
-    if (!targetPiece) {
-      moves.push({ row, col });
-      return true;
+    // Can only move to an occupied square if it's an opponent's piece (capture)
+    // selectedPiece might be null if just generating moves for check detection
+    const movingPieceColor = selectedPiece ? selectedPiece.dataset.color : (currentPlayer === 'white' ? 'black' : 'white'); // Determine color context if needed
+    if (targetPiece.dataset.color !== movingPieceColor) {
+        moves.push({ row, col });
+        return true; // Allows capture, but indicates the square wasn't empty
+    } else {
+        // Cannot move onto a square occupied by a friendly piece
+        return false;
     }
   }
-
-  return false;
-} 
+}
 
 
 // Add a capture move to the list if it's valid
@@ -99,6 +129,7 @@ function addCaptureMoveIfValid(moves, row, col, color) {
   if (row >= 0 && row < 8 && col >= 0 && col < 8) {
     const targetSquare = squares[row * 8 + col];
     const targetPiece = targetSquare.querySelector('.piece');
+    // Add move only if there is a piece AND it's the opponent's color
     if (targetPiece && targetPiece.dataset.color !== color) {
       moves.push({ row, col });
     }
@@ -110,10 +141,24 @@ function addLineMoves(moves, row, col, rowInc, colInc) {
   let r = row + rowInc;
   let c = col + colInc;
   while (r >= 0 && r < 8 && c >= 0 && c < 8) {
-    if (!addMoveIfValid(moves, r, c, true)) break;
     const targetSquare = squares[r * 8 + c];
+    if (!targetSquare) break; // Should not happen
+
     const targetPiece = targetSquare.querySelector('.piece');
-    if (targetPiece) break; // Stop at the first piece
+
+    if (!targetPiece) {
+      // Square is empty, add move and continue along the line
+      moves.push({ row: r, col: c });
+    } else {
+      // Square has a piece
+      // Check if it's an opponent's piece (capture)
+       const movingPieceColor = selectedPiece ? selectedPiece.dataset.color : (currentPlayer === 'white' ? 'black' : 'white');
+      if (targetPiece.dataset.color !== movingPieceColor) {
+        moves.push({ row: r, col: c }); // Add the capture move
+      }
+      // Stop searching along this line whether it was a capture or a friendly piece
+      break;
+    }
     r += rowInc;
     c += colInc;
   }
@@ -126,7 +171,6 @@ function highlightPossibleMoves() {
     square.classList.add('highlight');
   });
 }
-
 
 
 // Clear highlighted moves

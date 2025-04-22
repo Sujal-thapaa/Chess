@@ -90,7 +90,11 @@ function isCheckmate(color) {
   
     return false;
   }
+
+
+  
   
 
   window.isKingInCheck = isKingInCheck;
 window.isCheckmate = isCheckmate;
+
