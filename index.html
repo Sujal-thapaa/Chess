@@ -5,16 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Chess960</title>
   <link rel="stylesheet" href="styles.css">
+  <script src="https://cdn.jsdelivr.net/gh/niklasf/stockfish.js/stockfish.js"></script>
+
 </head>
 <body>
   <div id="chessboard-container">
     <div id="chessboard"></div>
   </div>
-  <script src="movement.js"></script>
+  <!-- <script src="movement.js"></script>
   <script src="chessboard.js"></script>
   <script src="pieces.js"></script>
   <script src="gameplay.js"></script>
   <script src="promotion.js"></script>
   <script src="check.js"></script>
+  <script src="castle.js"></script>
+  <script src="checkmate.js"></script> -->
+
+  <!-- Core game logic and dependencies -->
+ <!-- 1. Core board and rendering setup -->
+<script src="chessboard.js"></script>
+
+<!-- 2. Movement and user interaction (needs checkmate functions) -->
+<script src="checkmate.js"></script>     <!-- defines isKingInCheck -->
+<script src="movement.js"></script>      <!-- uses isKingInCheck -->
+
+<!-- 3. Board creation and population -->
+<script src="pieces.js"></script>        <!-- defines squares[], must come before gameplay -->
+
+<!-- 4. Game logic and helpers -->
+<script src="gameplay.js"></script>      <!-- getPseudoLegalMoves etc. -->
+<script src="fen.js"></script>
+<script src="promotion.js"></script>
+<script src="castle.js"></script>
+
+<!-- 5. AI logic -->
+<script src="ai.js"></script>
+
+
 </body>
 </html>

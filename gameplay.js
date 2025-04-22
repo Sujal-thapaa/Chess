@@ -1,5 +1,5 @@
 // Get possible moves for a piece
-function getPossibleMoves(type, color, row, col) {
+function getPseudoLegalMoves(type, color, row, col) {
   const moves = [];
 
   switch (type) {
@@ -68,16 +68,31 @@ function getPossibleMoves(type, color, row, col) {
 
 // Add a move to the list if it's valid
 function addMoveIfValid(moves, row, col, capture = false) {
-  if (row >= 0 && row < 8 && col >= 0 && col < 8) {
-    const targetSquare = squares[row * 8 + col];
-    const targetPiece = targetSquare.querySelector('.piece');
-    if (!targetPiece || (capture && targetPiece.dataset.color !== selectedPiece.dataset.color)) {
+  if (row < 0 || row >= 8 || col < 0 || col >= 8) return false;
+
+  const index = row * 8 + col;
+  const targetSquare = squares[index];
+  if (!targetSquare) return false;
+
+  const targetPiece = targetSquare.querySelector('.piece');
+
+  // If it's a capture move, make sure we're capturing an enemy piece
+  if (capture) {
+    if (targetPiece && targetPiece.dataset && targetPiece.dataset.color !== selectedPiece?.dataset?.color) {
+      moves.push({ row, col });
+      return true;
+    }
+  } else {
+    // If it's a non-capture move, it must be an empty square
+    if (!targetPiece) {
       moves.push({ row, col });
       return true;
     }
   }
+
   return false;
-}
+} 
+
 
 // Add a capture move to the list if it's valid
 function addCaptureMoveIfValid(moves, row, col, color) {
@@ -173,3 +188,7 @@ document.addEventListener('keydown', (event) => {
 
 placeInitialPieces();
 saveMoveHistory();
+highlightKingInCheck();
+
+
+window.getPseudoLegalMoves = getPseudoLegalMoves;
